@@ -1,0 +1,23 @@
+@*
+    One shared confirm dialog. Any button or link with data-confirm-title opens it instead of
+    acting straight away; site.js fills the texts from:
+      data-confirm-kind="danger|default"  data-confirm-title  data-confirm-text
+      data-confirm-ok  data-confirm-cancel
+    The text must say what will happen, for example "moves to the Recycle Bin".
+    Centered on desktop, a bottom sheet on phones. Without JavaScript the action runs directly.
+*@
+<div class="modal fade sd-confirm" id="sdConfirm" tabindex="-1" aria-labelledby="sdConfirmTitle" aria-describedby="sdConfirmText" aria-hidden="true" data-kind="danger">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="sd-confirm-icon" data-sd-confirm-icon><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></div>
+                <h2 class="sd-confirm-title" id="sdConfirmTitle">Are you sure?</h2>
+                <p class="sd-confirm-text" id="sdConfirmText"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" data-sd-confirm-cancel>Cancel</button>
+                <button type="button" class="btn btn-danger" data-sd-confirm-ok>Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>

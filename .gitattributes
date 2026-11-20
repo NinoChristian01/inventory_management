@@ -1,0 +1,11 @@
+# Normalize line endings in the repository; Git checks files out with the platform's endings.
+* text=auto
+
+*.cs      text diff=csharp
+*.cshtml  text
+*.sql     text
+
+*.png     binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary

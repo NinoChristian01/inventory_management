@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Implements Application's interfaces: database, Identity stores, files, background jobs. -->
+  <PropertyGroup>
+    <RootNamespace>ServiceDesk.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDesk.Application\ServiceDesk.Application.csproj" />
+  </ItemGroup>
+
+</Project>

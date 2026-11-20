@@ -1,0 +1,33 @@
+@*
+    Shows TempData messages set before a redirect (see Helpers/Toasts.cs). Toasts render
+    already visible so they still show without JavaScript; site.js adds auto-hide and close.
+    Errors stay until closed.
+*@
+@{
+    var kinds = new[]
+    {
+        (Key: Toasts.Success, Css: "success", Icon: "check-circle-fill"),
+        (Key: Toasts.Info, Css: "info", Icon: "info-circle-fill"),
+        (Key: Toasts.Warning, Css: "warning", Icon: "exclamation-triangle-fill"),
+        (Key: Toasts.Error, Css: "danger", Icon: "exclamation-octagon-fill"),
+    };
+}
+<div class="toast-container sd-toasts" id="sdToasts">
+    @foreach (var kind in kinds)
+    {
+        if (TempData[kind.Key] is string message && !string.IsNullOrWhiteSpace(message))
+        {
+            var isError = kind.Css == "danger";
+            <div class="toast show sd-toast sd-toast-@kind.Css" role="@(isError ? "alert" : "status")" aria-live="@(isError ? "assertive" : "polite")" aria-atomic="true"
+                 data-sd-autoshow data-bs-autohide="@(isError ? "false" : "true")" data-bs-delay="6000">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-@kind.Icon sd-toast-icon" aria-hidden="true"></i>
+                        <span>@message</span>
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    }
+</div>

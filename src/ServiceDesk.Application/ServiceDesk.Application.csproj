@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Use cases, DTOs, validators and the interfaces Infrastructure implements. -->
+  <PropertyGroup>
+    <RootNamespace>ServiceDesk.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDesk.Domain\ServiceDesk.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

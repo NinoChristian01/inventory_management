@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- MVC, API controllers and the SignalR hub. Also the composition root that wires every layer. -->
+  <PropertyGroup>
+    <RootNamespace>ServiceDesk.Web</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDesk.Application\ServiceDesk.Application.csproj" />
+    <ProjectReference Include="..\ServiceDesk.Infrastructure\ServiceDesk.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- LibMan manifest; the restored files in wwwroot/lib are committed so builds work offline. -->
+    <Content Update="libman.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Phone layer. Everything sits inside the same breakpoint the sidebar uses (Bootstrap's lg),
+   so desktop never changes. Test at 390×844 and 360×740: no page may scroll sideways.
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    :root { --sd-gutter: 1rem; --sd-topbar-h: 58px; }
+
+    /* Top bar: menu button, title, actions. The breadcrumb is hidden to save room. */
+    .sd-topbar {
+        padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+        padding-left: max(var(--sd-gutter), env(safe-area-inset-left, 0px));
+        padding-right: max(var(--sd-gutter), env(safe-area-inset-right, 0px));
+    }
+    .sd-breadcrumb { display: none; }
+    .sd-page-title { font-size: 1.05rem; }
+    .sd-content {
+        padding-left: max(var(--sd-gutter), env(safe-area-inset-left, 0px));
+        padding-right: max(var(--sd-gutter), env(safe-area-inset-right, 0px));
+        padding-bottom: max(var(--sd-gutter), env(safe-area-inset-bottom, 0px));
+    }
+    .sd-footer {
+        padding-left: max(var(--sd-gutter), env(safe-area-inset-left, 0px));
+        padding-right: max(var(--sd-gutter), env(safe-area-inset-right, 0px));
+        padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Drawer menu */
+    .sd-sidebar .sd-brand { padding-top: env(safe-area-inset-top, 0px); }
+    .sd-sidebar-inner { padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); }
+
+    /* Touch: 16px fields stop iPhone zooming in; 44px targets. */
+    .form-control, .form-select { min-height: 44px; font-size: 16px; }
+    .btn { min-height: 44px; }
+    .btn-sm { min-height: 36px; }
+    .sd-icon-btn { width: 44px; height: 44px; }
+    .form-check-input { width: 1.25rem; height: 1.25rem; }
+    .sd-nav-link { min-height: 44px; }
+
+    /* Page head: buttons go full width. */
+    .sd-page-head { flex-direction: column; align-items: stretch; }
+    .sd-page-actions { display: grid; grid-template-columns: 1fr; }
+
+    /* Label above value */
+    .sd-kv { grid-template-columns: 1fr; gap: 0.1rem; }
+    .sd-kv dd { margin-bottom: 0.65rem; }
+
+    /* Tables marked .sd-stack become cards once site.js has copied each header into data-label.
+       Without JavaScript they keep their normal layout and scroll sideways. */
+    table.sd-stack.has-labels thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    table.sd-stack.has-labels,
+    table.sd-stack.has-labels tbody,
+    table.sd-stack.has-labels tr,
+    table.sd-stack.has-labels td { display: block; width: 100%; }
+    table.sd-stack.has-labels tr {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem 0.85rem;
+        border: 1px solid var(--sd-line);
+        border-radius: var(--sd-radius);
+        background: var(--sd-surface);
+    }
+    table.sd-stack.has-labels td {
+        display: grid;
+        grid-template-columns: 6rem minmax(0, 1fr);
+        gap: 0.6rem;
+        padding: 0.3rem 0;
+        border: 0;
+    }
+    /* Chips and times may wrap inside a card instead of running past its edge. */
+    table.sd-stack.has-labels .sd-sla,
+    table.sd-stack.has-labels time { white-space: normal; }
+    .card-body:has(> table.sd-stack.has-labels),
+    .card-body:has(.dt-container table.sd-stack.has-labels) { padding-inline: 0.75rem; }
+    table.sd-stack.has-labels td::before {
+        content: attr(data-label);
+        padding-top: 0.15rem;
+        color: var(--sd-muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    /* Everything a cell holds goes in the value column, even when it has several lines. */
+    table.sd-stack.has-labels td > * { grid-column: 2; justify-self: start; }
+    table.sd-stack.has-labels td.m-title { display: block; order: -1; min-width: 0; padding-bottom: 0.5rem; font-size: 1rem; font-weight: 700; }
+    table.sd-stack.has-labels td.m-title::before { content: none; }
+    table.sd-stack.has-labels td.m-wide { grid-template-columns: 1fr; gap: 0.2rem; }
+    table.sd-stack.has-labels td.m-wide > * { grid-column: 1; }
+    table.sd-stack.has-labels td.m-hide { display: none; }
+    table.sd-stack.has-labels td.actions { display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.6rem; }
+    table.sd-stack.has-labels td.actions::before { content: none; }
+
+    /* Toasts: full width under the top bar. bottom: auto keeps the toast area from covering the page. */
+    .sd-toasts {
+        top: calc(var(--sd-topbar-h) + env(safe-area-inset-top, 0px) + 0.5rem);
+        bottom: auto;
+        left: max(0.75rem, env(safe-area-inset-left, 0px));
+        right: max(0.75rem, env(safe-area-inset-right, 0px));
+        width: auto;
+    }
+
+    /* Confirm dialog: a bottom sheet with the main button on top. */
+    .sd-confirm .modal-dialog { display: flex; align-items: flex-end; min-height: 100%; max-width: none; margin: 0; }
+    .sd-confirm.fade .modal-dialog { transform: translateY(100%); transition: transform 0.25s ease-out; }
+    .sd-confirm.show .modal-dialog { transform: none; }
+    .sd-confirm .modal-content { width: 100%; border-radius: 1.1rem 1.1rem 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .sd-confirm .modal-footer { flex-direction: column-reverse; align-items: stretch; }
+    .sd-confirm .modal-footer > .btn { width: 100%; }
+
+    /* Sign-in: a short brand band so the form shows on the first screen. */
+    .sd-auth-brand { gap: 0; padding: max(1.25rem, env(safe-area-inset-top, 0px)) 1.25rem 1.25rem; }
+    .sd-auth-points { display: none; }
+    .sd-auth-panel { justify-content: flex-start; padding: 1.75rem 1.25rem max(1.5rem, env(safe-area-inset-bottom, 0px)); }
+
+    .sd-error { margin-top: 1.5rem; }
+}

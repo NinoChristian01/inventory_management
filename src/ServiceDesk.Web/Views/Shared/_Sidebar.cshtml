@@ -1,0 +1,37 @@
+@inject IOptions<AppOptions> AppSettings
+@inject IWebHostEnvironment Env
+@{
+    var app = AppSettings.Value;
+}
+<aside class="sd-sidebar offcanvas-lg offcanvas-start" id="sdSidebar" tabindex="-1" aria-label="Main menu">
+    <div class="sd-sidebar-inner" data-bs-theme="dark">
+        <div class="sd-brand">
+            <a class="sd-brand-link" asp-controller="Home" asp-action="Index">
+                <img class="sd-brand-mark" src="~/img/favicon.svg" alt="" width="36" height="36" />
+                <span class="sd-brand-text">
+                    <span class="sd-brand-name">@app.Name</span>
+                    <span class="sd-brand-org">@app.OrganizationName</span>
+                </span>
+            </a>
+            <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sdSidebar" aria-label="Close menu"></button>
+        </div>
+
+        <nav class="sd-nav" aria-label="Main">
+            <div class="sd-nav-group">
+                <p class="sd-nav-title">Overview</p>
+                <nav-link controller="Home" icon="grid-1x2">Dashboard</nav-link>
+            </div>
+
+            @if (Env.IsDevelopment())
+            {
+                <div class="sd-nav-group">
+                    <p class="sd-nav-title">Developer</p>
+                    <nav-link controller="Dev" action="Ui" icon="palette2" match-controller="false">UI kit</nav-link>
+                    <nav-link controller="Dev" action="SignIn" icon="box-arrow-in-right" match-controller="false">Sign-in preview</nav-link>
+                </div>
+            }
+        </nav>
+
+        <div class="sd-sidebar-foot">Version @AppVersion.Current</div>
+    </div>
+</aside>

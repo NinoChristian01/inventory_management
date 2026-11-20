@@ -1,0 +1,27 @@
+<Project>
+  <!-- Build settings shared by every project in the solution. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Warnings fail the build, so problems are fixed when they appear instead of piling up. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Required for IDE0005 (unused usings) to run during build. XML comments stay optional. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- Known-vulnerable packages, direct or transitive, fail the build. -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>moderate</NuGetAuditLevel>
+
+    <Product>ServiceDesk</Product>
+    <Company>Management Information System</Company>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>

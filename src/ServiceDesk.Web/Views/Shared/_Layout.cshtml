@@ -1,0 +1,89 @@
+@inject IOptions<AppOptions> AppSettings
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject IWebHostEnvironment Env
+@{
+    var app = AppSettings.Value;
+    var title = ViewData["Title"] as string ?? app.Name;
+    var parent = ViewData["Parent"] as string;
+    var parentUrl = ViewData["ParentUrl"] as string;
+    var requestToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="request-verification-token" content="@requestToken" />
+    <title>@title · @app.Name</title>
+    <link rel="icon" href="~/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    @await RenderSectionAsync("Styles", required: false)
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.mobile.css" asp-append-version="true" />
+    <script src="~/js/sidebar-state.js" asp-append-version="true"></script>
+</head>
+<body class="sd-app">
+    <a class="visually-hidden-focusable sd-skip" href="#main">Skip to content</a>
+    <div class="sd-shell">
+        <partial name="_Sidebar" />
+
+        <div class="sd-main">
+            <header class="sd-topbar">
+                <button type="button" class="btn sd-icon-btn d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sdSidebar" aria-controls="sdSidebar" aria-label="Open menu">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn sd-icon-btn d-none d-lg-inline-flex" data-sd-sidebar-toggle aria-label="Collapse sidebar" aria-pressed="false">
+                    <i class="bi bi-layout-sidebar" aria-hidden="true"></i>
+                </button>
+
+                <div class="sd-titlebar">
+                    <nav aria-label="Breadcrumb">
+                        <ol class="breadcrumb sd-breadcrumb">
+                            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                            @if (!string.IsNullOrEmpty(parent))
+                            {
+                                <li class="breadcrumb-item">
+                                    @if (!string.IsNullOrEmpty(parentUrl))
+                                    {
+                                        <a href="@parentUrl">@parent</a>
+                                    }
+                                    else
+                                    {
+                                        @parent
+                                    }
+                                </li>
+                            }
+                            <li class="breadcrumb-item active" aria-current="page">@title</li>
+                        </ol>
+                    </nav>
+                    <h1 class="sd-page-title">@title</h1>
+                </div>
+
+                <div class="sd-topbar-actions">
+                    @if (!Env.IsProduction())
+                    {
+                        <span class="sd-env-badge" title="This is not the live system">@Env.EnvironmentName</span>
+                    }
+                </div>
+            </header>
+
+            <main id="main" class="sd-content" tabindex="-1">
+                @RenderBody()
+            </main>
+
+            <footer class="sd-footer">
+                <span>@app.Name · @app.OrganizationName</span>
+                <span>Version @AppVersion.Current</span>
+            </footer>
+        </div>
+    </div>
+
+    <partial name="_Toasts" />
+    <partial name="_ConfirmModal" />
+
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

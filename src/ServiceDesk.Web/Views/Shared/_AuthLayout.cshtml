@@ -1,0 +1,51 @@
+@inject IOptions<AppOptions> AppSettings
+@{
+    var app = AppSettings.Value;
+    var title = ViewData["Title"] as string ?? "Sign in";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>@title · @app.Name</title>
+    <link rel="icon" href="~/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.mobile.css" asp-append-version="true" />
+</head>
+<body class="sd-auth">
+    <div class="sd-auth-wrap">
+        <section class="sd-auth-brand" data-bs-theme="dark">
+            <div class="sd-auth-brand-head">
+                <img class="sd-brand-mark" src="~/img/favicon.svg" alt="" width="40" height="40" />
+                <div>
+                    <p class="sd-auth-name">@app.Name</p>
+                    <p class="sd-auth-org">@app.OrganizationName</p>
+                </div>
+            </div>
+            <div class="sd-auth-points">
+                <h2>Report a problem. Follow it to the fix.</h2>
+                <ul>
+                    <li><i class="bi bi-ticket-perforated" aria-hidden="true"></i>Every request gets a number you can track.</li>
+                    <li><i class="bi bi-clock-history" aria-hidden="true"></i>Response and resolution times are measured.</li>
+                    <li><i class="bi bi-chat-left-text" aria-hidden="true"></i>Talk to the person working on your request.</li>
+                </ul>
+            </div>
+        </section>
+
+        <main class="sd-auth-panel">
+            <div class="sd-auth-card">
+                @RenderBody()
+            </div>
+            <p class="sd-auth-foot">@app.Name · Version @AppVersion.Current</p>
+        </main>
+    </div>
+
+    <partial name="_Toasts" />
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

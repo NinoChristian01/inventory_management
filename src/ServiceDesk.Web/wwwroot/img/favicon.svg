@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ServiceDesk">
+  <rect width="64" height="64" rx="14" fill="#0a6c6b"/>
+  <path d="M18 18h28a4 4 0 0 1 4 4v5a5 5 0 0 0 0 10v5a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4v-5a5 5 0 0 0 0-10v-5a4 4 0 0 1 4-4z" fill="#ffffff"/>
+  <path d="M38 22v20" stroke="#0a6c6b" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="2.5 3.5"/>
+  <path d="M21 27h11M21 32h9M21 37h11" stroke="#7fd3cd" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Business rules and entities. References nothing else in the solution. -->
+  <PropertyGroup>
+    <RootNamespace>ServiceDesk.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>
