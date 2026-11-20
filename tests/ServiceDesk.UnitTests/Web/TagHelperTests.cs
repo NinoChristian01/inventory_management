@@ -16,7 +16,7 @@ public sealed class TagHelperTests
     [Fact]
     public void Status_badge_renders_a_pill_with_the_default_label()
     {
-        var html = Render(new StatusBadgeTagHelper { Code = TicketStatusCode.PendingThirdParty }, "status-badge");
+        var html = Render(new StatusBadgeTagHelper { Code = nameof(TicketStatusCode.PendingThirdParty) }, "status-badge");
 
         Assert.Equal("<span class=\"sd-badge sd-status-pending-third-party\">Pending Third Party</span>", html);
     }
@@ -24,7 +24,7 @@ public sealed class TagHelperTests
     [Fact]
     public void Status_badge_prefers_a_renamed_label_and_encodes_it()
     {
-        var html = Render(new StatusBadgeTagHelper { Code = TicketStatusCode.OnHold, Label = "Parked <b>" }, "status-badge");
+        var html = Render(new StatusBadgeTagHelper { Code = nameof(TicketStatusCode.OnHold), Label = "Parked <b>" }, "status-badge");
 
         Assert.Contains("Parked &lt;b&gt;", html, StringComparison.Ordinal);
         Assert.DoesNotContain("<b>", html, StringComparison.Ordinal);
@@ -33,7 +33,7 @@ public sealed class TagHelperTests
     [Fact]
     public void Priority_indicator_always_writes_the_name()
     {
-        var html = Render(new PriorityTagHelper { Code = PriorityCode.Critical }, "priority-indicator");
+        var html = Render(new PriorityTagHelper { Code = nameof(PriorityCode.Critical) }, "priority-indicator");
 
         Assert.Equal("<span class=\"sd-priority sd-priority-critical\">Critical</span>", html);
     }

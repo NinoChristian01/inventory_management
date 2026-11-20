@@ -1,0 +1,63 @@
+@model ServiceDesk.Web.ViewModels.Tickets.CreateTicketViewModel
+@{
+    ViewData["Title"] = "New ticket";
+}
+
+<div class="sd-page-head">
+    <div>
+        <h2>Create a new ticket</h2>
+        <p class="sd-page-lede">Describe the issue or request. The MIS office will triage and respond based on priority and SLA.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title mb-0">Ticket details</h3></div>
+            <div class="card-body">
+                <form method="post" asp-action="Create" class="d-grid gap-3" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="sd-validation-summary" role="alert"></div>
+
+                    <div>
+                        <label asp-for="Subject" class="form-label"></label>
+                        <input asp-for="Subject" class="form-control" placeholder="Brief summary of the issue or request" />
+                        <span asp-validation-for="Subject"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="PriorityId" class="form-label"></label>
+                            <select asp-for="PriorityId" asp-items="Model.Priorities" class="form-select"></select>
+                            <span asp-validation-for="PriorityId"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select"></select>
+                            <span asp-validation-for="CategoryId"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="AssignedTeamId" class="form-label"></label>
+                            <select asp-for="AssignedTeamId" asp-items="Model.Teams" class="form-select"></select>
+                            <span asp-validation-for="AssignedTeamId"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="8" placeholder="What happened, when it started, affected system/location, and any steps already tried..."></textarea>
+                        <span asp-validation-for="Description"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 pt-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-send" aria-hidden="true"></i>Submit ticket</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

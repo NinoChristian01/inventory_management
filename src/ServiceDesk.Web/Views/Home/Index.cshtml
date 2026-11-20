@@ -1,7 +1,8 @@
-@model SystemStatusViewModel
+@model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    var healthCss = Model.OverallStatus switch
+    var s = Model.SystemStatus;
+    var healthCss = s.OverallStatus switch
     {
         "Healthy" => "sd-health-ok",
         "Degraded" => "sd-health-warn",
@@ -9,45 +10,132 @@
     };
 }
 <div class="sd-page-head">
-    <p class="sd-page-lede">Service desk for the @Model.OrganizationName office. This panel shows whether the system is healthy and which time zone it works in.</p>
+    <p class="sd-page-lede">Service desk for the @s.OrganizationName office. Track ticket activity and system health in one place.</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-6 col-xl">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small mb-1">Open tickets</div>
+                <div class="fs-3 fw-semibold">@Model.Stats.OpenCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small mb-1">My open / related</div>
+                <div class="fs-3 fw-semibold">@Model.Stats.MyOpenCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small mb-1">Unassigned</div>
+                <div class="fs-3 fw-semibold">@Model.Stats.UnassignedCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl">
+        <div class="card h-100 border-danger-subtle">
+            <div class="card-body">
+                <div class="text-body-secondary small mb-1">Overdue</div>
+                <div class="fs-3 fw-semibold text-danger">@Model.Stats.OverdueCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small mb-1">Resolved today</div>
+                <div class="fs-3 fw-semibold">@Model.Stats.ResolvedTodayCount</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row g-4">
     <div class="col-12 col-xl-7">
-        <section class="card h-100" aria-labelledby="sdStatusTitle">
+        <section class="card h-100" aria-labelledby="sdRecentTitle">
             <div class="card-header d-flex align-items-center justify-content-between gap-3">
-                <h2 class="card-title" id="sdStatusTitle">System status</h2>
-                <span class="sd-health @healthCss"><i class="bi bi-heart-pulse" aria-hidden="true"></i>@Model.OverallStatus</span>
+                <h2 class="card-title" id="sdRecentTitle">Recently updated tickets</h2>
+                <a asp-controller="Tickets" asp-action="Index" class="btn btn-sm btn-outline-secondary">View all</a>
             </div>
-            <div class="card-body">
-                <dl class="sd-kv">
-                    <dt>Environment</dt>
-                    <dd>@Model.EnvironmentName</dd>
-                    <dt>Version</dt>
-                    <dd class="sd-mono">@Model.Version</dd>
-                    <dt>Time zone</dt>
-                    <dd>@Model.TimeZoneId <span class="text-body-secondary">(@Model.UtcOffset)</span></dd>
-                    <dt>Local time</dt>
-                    <dd><local-time value="@Model.NowUtc" /></dd>
-                    <dt>Server time (UTC)</dt>
-                    <dd class="sd-mono">@Model.NowUtc.ToString("yyyy-MM-dd HH:mm 'UTC'", System.Globalization.CultureInfo.InvariantCulture)</dd>
-                    @if (Model.Runtime is not null)
-                    {
-                        <dt>Runtime</dt>
-                        <dd>@Model.Runtime</dd>
-                    }
-                </dl>
+            <div class="card-body p-0">
+                @if (Model.RecentTickets.Count == 0)
+                {
+                    <div class="p-4 text-body-secondary">No tickets to show yet.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th class="m-hide">Requester</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th class="m-hide">Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var t in Model.RecentTickets)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-controller="Tickets" asp-action="Details" asp-route-id="@t.Id" class="text-decoration-none">
+                                            <span class="sd-ticket-no">@t.TicketNumber</span>
+                                        </a>
+                                        <div class="small">@t.Subject</div>
+                                    </td>
+                                    <td class="m-hide">@t.Requester</td>
+                                    <td><status-badge code="@t.StatusCode" /></td>
+                                    <td><priority-indicator code="@t.PriorityCode" /></td>
+                                    <td class="m-hide"><local-time value="@t.UpdatedAtUtc" /></td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </section>
     </div>
 
     <div class="col-12 col-xl-5">
-        <section class="card h-100" aria-labelledby="sdChecksTitle">
+        <section class="card mb-4" aria-labelledby="sdStatusTitle">
+            <div class="card-header d-flex align-items-center justify-content-between gap-3">
+                <h2 class="card-title" id="sdStatusTitle">System status</h2>
+                <span class="sd-health @healthCss"><i class="bi bi-heart-pulse" aria-hidden="true"></i>@s.OverallStatus</span>
+            </div>
+            <div class="card-body">
+                <dl class="sd-kv">
+                    <dt>Environment</dt>
+                    <dd>@s.EnvironmentName</dd>
+                    <dt>Version</dt>
+                    <dd class="sd-mono">@s.Version</dd>
+                    <dt>Time zone</dt>
+                    <dd>@s.TimeZoneId <span class="text-body-secondary">(@s.UtcOffset)</span></dd>
+                    <dt>Local time</dt>
+                    <dd><local-time value="@s.NowUtc" /></dd>
+                    @if (s.Runtime is not null)
+                    {
+                        <dt>Runtime</dt>
+                        <dd>@s.Runtime</dd>
+                    }
+                </dl>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="sdChecksTitle">
             <div class="card-header">
                 <h2 class="card-title" id="sdChecksTitle">Health checks</h2>
             </div>
             <ul class="list-group list-group-flush">
-                @foreach (var check in Model.Checks)
+                @foreach (var check in s.Checks)
                 {
                     var ok = check.Status == "Healthy";
                     <li class="list-group-item d-flex align-items-start gap-3 py-3">

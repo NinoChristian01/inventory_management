@@ -1,0 +1,55 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Teams";
+}
+
+<div class="sd-page-head">
+    <div>
+        <h2>Teams</h2>
+        <p class="sd-page-lede">Departments and service teams used for routing and assignment.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3 class="card-title mb-0">Team list</h3></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle sd-stack">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th class="m-hide">Members</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td class="m-title"><span class="sd-ticket-no">@t.Code</span></td>
+                        <td>@t.Name</td>
+                        <td>@(t.IsServiceTeam ? "Service team" : "Department/Office")</td>
+                        <td>
+                            @if (t.IsDeleted)
+                            {
+                                <span class="sd-badge sd-status-closed">Deleted</span>
+                            }
+                            else if (t.IsActive)
+                            {
+                                <span class="sd-badge sd-status-open">Active</span>
+                            }
+                            else
+                            {
+                                <span class="sd-badge sd-status-on-hold">Inactive</span>
+                            }
+                        </td>
+                        <td class="m-hide">@t.MemberCount</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

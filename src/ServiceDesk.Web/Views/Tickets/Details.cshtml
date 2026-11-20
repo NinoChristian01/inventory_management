@@ -1,0 +1,293 @@
+@model ServiceDesk.Web.ViewModels.Tickets.TicketDetailsViewModel
+@using ServiceDesk.Domain.Entities
+@{
+    var t = Model.Details.Ticket;
+    var attachmentsByComment = Model.Details.Attachments
+        .Where(a => a.CommentId.HasValue)
+        .GroupBy(a => a.CommentId!.Value)
+        .ToDictionary(g => g.Key, g => g.ToList());
+    var ticketLevelAttachments = Model.Details.Attachments.Where(a => a.CommentId is null).ToList();
+    ViewData["Title"] = t.TicketNumber;
+}
+
+<div class="sd-page-head">
+    <div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="sd-ticket-no">@t.TicketNumber</span>
+            <status-badge code="@t.Status.Code" />
+            <priority-indicator code="@t.Priority.Code" />
+        </div>
+        <h2 class="mb-1">@t.Subject</h2>
+        <p class="sd-page-lede mb-0">
+            Requested by <strong>@(t.Requester?.FullName ?? t.RequesterNameSnapshot ?? "Unknown")</strong>
+            · <local-time value="@t.CreatedAtUtc" />
+        </p>
+    </div>
+    <div class="sd-page-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left"></i>Back to tickets</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <section class="card mb-4">
+            <div class="card-header"><h3 class="card-title mb-0">Description</h3></div>
+            <div class="card-body">
+                <div style="white-space: pre-wrap;">@t.Description</div>
+                @if (ticketLevelAttachments.Count > 0)
+                {
+                    <hr />
+                    <h4 class="h6 mb-2">Attachments</h4>
+                    <ul class="list-unstyled mb-0 d-grid gap-1">
+                        @foreach (var a in ticketLevelAttachments)
+                        {
+                            <li>
+                                <a asp-action="DownloadAttachment" asp-route-id="@t.Id" asp-route-attachmentId="@a.Id">
+                                    <i class="bi bi-paperclip"></i> @a.OriginalFileName
+                                </a>
+                                <span class="small text-body-secondary">(@(Math.Max(1, a.FileSizeBytes / 1024)) KB)</span>
+                                @if (a.IsInternal) { <span class="badge text-bg-warning ms-1">Internal</span> }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </section>
+
+        <section class="card mb-4" aria-labelledby="commentsTitle">
+            <div class="card-header"><h3 class="card-title mb-0" id="commentsTitle">Conversation</h3></div>
+            <div class="card-body">
+                @if (Model.Details.Comments.Count == 0)
+                {
+                    <p class="text-body-secondary mb-0">No comments yet.</p>
+                }
+                else
+                {
+                    <div class="d-grid gap-3 mb-4">
+                        @foreach (var c in Model.Details.Comments)
+                        {
+                            var internalNote = string.Equals(c.Visibility, "internal", StringComparison.OrdinalIgnoreCase);
+                            attachmentsByComment.TryGetValue(c.Id, out var cAttachments);
+                            <div class="border rounded p-3 @(internalNote ? "bg-warning-subtle border-warning-subtle" : "")">
+                                <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <strong>@(c.Author?.FullName ?? "System")</strong>
+                                        @if (internalNote)
+                                        {
+                                            <span class="badge text-bg-warning ms-2">Internal note</span>
+                                        }
+                                        else if (string.Equals(c.CommentType, "resolution", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <span class="badge text-bg-success ms-2">Resolution</span>
+                                        }
+                                    </div>
+                                    <span class="small text-body-secondary"><local-time value="@c.CreatedAtUtc" /></span>
+                                </div>
+                                <div style="white-space: pre-wrap;">@c.Body</div>
+                                @if (cAttachments is { Count: > 0 })
+                                {
+                                    <div class="mt-2 pt-2 border-top">
+                                        <div class="small text-body-secondary mb-1">Attachments</div>
+                                        <ul class="list-unstyled mb-0 d-grid gap-1">
+                                            @foreach (var a in cAttachments)
+                                            {
+                                                <li>
+                                                    <a asp-action="DownloadAttachment" asp-route-id="@t.Id" asp-route-attachmentId="@a.Id">
+                                                        <i class="bi bi-paperclip"></i> @a.OriginalFileName
+                                                    </a>
+                                                    <span class="small text-body-secondary">(@(Math.Max(1, a.FileSizeBytes / 1024)) KB)</span>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                <hr />
+                <form method="post" asp-action="AddComment" asp-route-id="@t.Id" enctype="multipart/form-data" class="d-grid gap-3">
+                    @Html.AntiForgeryToken()
+                    <div>
+                        <label class="form-label" for="Comment_Body">Add reply</label>
+                        <textarea class="form-control" id="Comment_Body" name="Comment.Body" rows="4" placeholder="Write a reply or note..."></textarea>
+                    </div>
+                    <div>
+                        <label class="form-label" for="attachments">Attachments (optional)</label>
+                        <input class="form-control" type="file" id="attachments" name="attachments" multiple />
+                        <div class="form-text">Up to 5 files per reply.</div>
+                    </div>
+                    @if (Model.CanViewInternalNotes)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="Comment_IsInternal" name="Comment.IsInternal" value="true" />
+                            <label class="form-check-label" for="Comment_IsInternal">Internal note (agents/leads/admin only)</label>
+                        </div>
+                    }
+                    <div>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-chat-left-text"></i>Post</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header"><h3 class="card-title mb-0">Activity</h3></div>
+            <div class="card-body">
+                @if (Model.Details.Activity.Count == 0)
+                {
+                    <p class="text-body-secondary mb-0">No activity recorded yet.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0 d-grid gap-2">
+                        @foreach (var a in Model.Details.Activity.Take(30))
+                        {
+                            <li class="border rounded p-2">
+                                <div class="d-flex justify-content-between flex-wrap gap-2">
+                                    <strong>@(a.ActorName ?? "System")</strong>
+                                    <span class="small text-body-secondary"><local-time value="@a.CreatedAtUtc" /></span>
+                                </div>
+                                <div class="small">
+                                    @a.EventType
+                                    @if (!string.IsNullOrWhiteSpace(a.OldValue) || !string.IsNullOrWhiteSpace(a.NewValue))
+                                    {
+                                        <span>: @a.OldValue → @a.NewValue</span>
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(a.NewValue))
+                                    {
+                                        <span>: @a.NewValue</span>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <section class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center gap-2">
+                <h3 class="card-title mb-0">Details</h3>
+                <form method="post" asp-action="ToggleWatch" asp-route-id="@t.Id" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="watch" value="@(Model.IsWatching ? "false" : "true")" />
+                    <button type="submit" class="btn btn-sm @(Model.IsWatching ? "btn-outline-secondary" : "btn-outline-primary")">
+                        <i class="bi @(Model.IsWatching ? "bi-eye-slash" : "bi-eye")"></i> @(Model.IsWatching ? "Unwatch" : "Watch")
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                <dl class="sd-kv">
+                    <dt>Requester</dt>
+                    <dd>@(t.Requester?.FullName ?? t.RequesterNameSnapshot ?? "Unknown")</dd>
+                    <dt>Department</dt>
+                    <dd>@(t.RequesterDepartment?.Name ?? "—")</dd>
+                    <dt>Team</dt>
+                    <dd>@(t.AssignedTeam?.Name ?? "Unassigned")</dd>
+                    <dt>Assignee</dt>
+                    <dd>@(t.PrimaryAssignee?.FullName ?? "Unassigned")</dd>
+                    <dt>Category</dt>
+                    <dd>@(t.Category?.Name ?? "—")</dd>
+                    <dt>Status</dt>
+                    <dd><status-badge code="@t.Status.Code" /></dd>
+                    <dt>Priority</dt>
+                    <dd><priority-indicator code="@t.Priority.Code" /></dd>
+                    <dt>Watchers</dt>
+                    <dd>
+                        @if (Model.Details.Watchers.Count == 0)
+                        {
+                            <span class="text-body-secondary">None</span>
+                        }
+                        else
+                        {
+                            @string.Join(", ", Model.Details.Watchers.Select(w => w.User?.FullName ?? $"User #{w.UserId}"))
+                        }
+                    </dd>
+                    <dt>Created</dt>
+                    <dd><local-time value="@t.CreatedAtUtc" /></dd>
+                    <dt>Updated</dt>
+                    <dd><local-time value="@t.UpdatedAtUtc" /></dd>
+                    @if (t.ResponseDueAtUtc.HasValue)
+                    {
+                        <dt>Response due</dt>
+                        <dd><local-time value="@t.ResponseDueAtUtc.Value" /></dd>
+                    }
+                    @if (t.ResolutionDueAtUtc.HasValue)
+                    {
+                        <dt>Resolution due</dt>
+                        <dd><local-time value="@t.ResolutionDueAtUtc.Value" /></dd>
+                    }
+                    @if (t.FirstResponseAtUtc.HasValue)
+                    {
+                        <dt>First response</dt>
+                        <dd><local-time value="@t.FirstResponseAtUtc.Value" /></dd>
+                    }
+                    @if (t.ResolvedAtUtc.HasValue)
+                    {
+                        <dt>Resolved</dt>
+                        <dd><local-time value="@t.ResolvedAtUtc.Value" /></dd>
+                    }
+                    @if (t.ClosedAtUtc.HasValue)
+                    {
+                        <dt>Closed</dt>
+                        <dd><local-time value="@t.ClosedAtUtc.Value" /></dd>
+                    }
+                </dl>
+            </div>
+        </section>
+
+        @if (Model.CanChangeStatus)
+        {
+            <section class="card mb-4">
+                <div class="card-header"><h3 class="card-title mb-0">Update status</h3></div>
+                <div class="card-body">
+                    <form method="post" asp-action="ChangeStatus" asp-route-id="@t.Id" class="d-grid gap-3">
+                        @Html.AntiForgeryToken()
+                        <div>
+                            <label class="form-label" for="ChangeStatus_NewStatusId">Status</label>
+                            <select class="form-select" id="ChangeStatus_NewStatusId" name="ChangeStatus.NewStatusId" asp-items="Model.Statuses"></select>
+                        </div>
+                        <div>
+                            <label class="form-label" for="ChangeStatus_Note">Note (optional)</label>
+                            <textarea class="form-control" id="ChangeStatus_Note" name="ChangeStatus.Note" rows="2"></textarea>
+                        </div>
+                        <div>
+                            <label class="form-label" for="ChangeStatus_ResolutionSummary">Resolution summary (required when resolving)</label>
+                            <textarea class="form-control" id="ChangeStatus_ResolutionSummary" name="ChangeStatus.ResolutionSummary" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update status</button>
+                    </form>
+                </div>
+            </section>
+        }
+
+        @if (Model.CanAssign)
+        {
+            <section class="card mb-4">
+                <div class="card-header"><h3 class="card-title mb-0">Assignment</h3></div>
+                <div class="card-body">
+                    <form method="post" asp-action="Assign" asp-route-id="@t.Id" class="d-grid gap-3">
+                        @Html.AntiForgeryToken()
+                        <div>
+                            <label class="form-label" for="Assign_TeamId">Team</label>
+                            <select class="form-select" id="Assign_TeamId" name="Assign.TeamId" asp-items="Model.Teams"></select>
+                        </div>
+                        <div>
+                            <label class="form-label" for="Assign_AssigneeUserId">Assignee</label>
+                            <select class="form-select" id="Assign_AssigneeUserId" name="Assign.AssigneeUserId" asp-items="Model.Users"></select>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="Assign_MakePrimary" name="Assign.MakePrimary" value="true" @(Model.Assign.MakePrimary ? "checked" : "") />
+                            <label class="form-check-label" for="Assign_MakePrimary">Set as primary assignee</label>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">Update assignment</button>
+                    </form>
+                </div>
+            </section>
+        }
+    </div>
+</div>

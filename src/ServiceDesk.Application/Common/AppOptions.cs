@@ -21,4 +21,8 @@ public sealed class AppOptions
     /// <summary>IANA time zone id used for display, business hours and "today".</summary>
     [Required]
     public string TimeZone { get; set; } = "Asia/Manila";
+
+    /// <summary>Root folder for uploaded attachments (relative to content root unless absolute).</summary>
+    [Required, StringLength(260)]
+    public string UploadRoot { get; set; } = "storage/uploads";
 }

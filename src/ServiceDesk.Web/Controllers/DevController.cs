@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ServiceDesk.Application.Interfaces;
@@ -13,6 +14,7 @@ namespace ServiceDesk.Web.Controllers;
 /// desktop and phone. Only reachable in the Development environment; elsewhere they answer 404.
 /// Nothing here reads or writes real data.
 /// </summary>
+[AllowAnonymous]
 [DevelopmentOnly]
 [Route("dev")]
 [ApiExplorerSettings(IgnoreApi = true)]

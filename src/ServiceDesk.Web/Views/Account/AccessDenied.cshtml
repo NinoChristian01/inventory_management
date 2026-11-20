@@ -1,0 +1,15 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Access denied";
+}
+<div class="sd-auth-intro">
+    <h1>Access denied</h1>
+    <p>You don’t have permission to view this page.</p>
+</div>
+<div class="d-grid gap-2">
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Go to dashboard</a>
+    <form method="post" asp-controller="Account" asp-action="Logout">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-outline-secondary w-100">Sign out</button>
+    </form>
+</div>

@@ -22,6 +22,46 @@
                 <nav-link controller="Home" icon="grid-1x2">Dashboard</nav-link>
             </div>
 
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="sd-nav-group">
+                    <p class="sd-nav-title">Helpdesk</p>
+                    <nav-link controller="Tickets" icon="ticket-perforated">Tickets</nav-link>
+                    <nav-link controller="Tickets" action="Create" icon="plus-circle" match-controller="false">New ticket</nav-link>
+                </div>
+
+                @if (User.IsInRole("Admin") || User.IsInRole("TeamLead"))
+                {
+                    <div class="sd-nav-group">
+                        <p class="sd-nav-title">Management</p>
+                        <nav-link controller="Users" icon="people">Users</nav-link>
+                        <nav-link controller="Teams" icon="diagram-3">Teams</nav-link>
+                    </div>
+                }
+
+                <div class="sd-nav-group">
+                    <p class="sd-nav-title">Account</p>
+                    @{
+                        var notifActive = string.Equals(ViewContext.RouteData.Values["controller"] as string, "Notifications", StringComparison.OrdinalIgnoreCase);
+                    }
+                    @if (notifActive)
+                    {
+                        <a class="sd-nav-link active" asp-controller="Notifications" asp-action="Index" title="Notifications" aria-current="page">
+                            <i class="bi bi-bell sd-nav-icon" aria-hidden="true"></i>
+                            <span class="sd-nav-label d-inline-flex align-items-center w-100 gap-2">Notifications @await Component.InvokeAsync("NotificationsBadge")</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="sd-nav-link" asp-controller="Notifications" asp-action="Index" title="Notifications">
+                            <i class="bi bi-bell sd-nav-icon" aria-hidden="true"></i>
+                            <span class="sd-nav-label d-inline-flex align-items-center w-100 gap-2">Notifications @await Component.InvokeAsync("NotificationsBadge")</span>
+                        </a>
+                    }
+                    <nav-link controller="Account" action="ChangePassword" icon="key" match-controller="false">Change password</nav-link>
+                </div>
+            }
+
             @if (Env.IsDevelopment())
             {
                 <div class="sd-nav-group">
@@ -32,6 +72,23 @@
             }
         </nav>
 
-        <div class="sd-sidebar-foot">Version @AppVersion.Current</div>
+        <div class="sd-sidebar-foot">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="mb-2 small text-white-50">
+                    <div class="fw-semibold text-white">@((User.FindFirst("full_name")?.Value) ?? User.Identity?.Name)</div>
+                    <div>@string.Join(", ", User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).Distinct())</div>
+                </div>
+                <form method="post" asp-controller="Account" asp-action="Logout" class="d-grid">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-light w-100"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Sign out</button>
+                </form>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-outline-light w-100" asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Sign in</a>
+            }
+            <div class="mt-2">Version @AppVersion.Current</div>
+        </div>
     </div>
 </aside>

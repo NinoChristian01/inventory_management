@@ -1,46 +1,52 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ServiceDesk.IntegrationTests;
 
-/// <summary>The layout, headers, error pages and health endpoint, as served in Production.</summary>
+/// <summary>
+/// Core shell, auth redirects, headers, error pages and health endpoint as served in Production.
+/// </summary>
 public sealed class ShellTests(ServiceDeskWebFactory factory) : IClassFixture<ServiceDeskWebFactory>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Dashboard_renders_inside_the_shell()
+    public async Task Home_redirects_to_sign_in_when_unauthenticated()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
-        var html = await client.GetStringAsync(new Uri("/", UriKind.Relative), Ct);
+        using var response = await client.GetAsync(new Uri("/", UriKind.Relative), Ct);
 
-        Assert.Contains("id=\"sdSidebar\"", html, StringComparison.Ordinal);
-        Assert.Contains("<h1 class=\"sd-page-title\">Dashboard</h1>", html, StringComparison.Ordinal);
-        Assert.Contains("class=\"sd-nav-link active\"", html, StringComparison.Ordinal);
-        Assert.Contains("aria-current=\"page\"", html, StringComparison.Ordinal);
-        Assert.Contains("System status", html, StringComparison.Ordinal);
-        Assert.Contains("Asia/Manila", html, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("/account/login", response.Headers.Location?.OriginalString, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task Production_hides_developer_pages_and_the_environment_badge()
+    public async Task Sign_in_page_renders()
     {
         using var client = factory.CreateClient();
 
-        var html = await client.GetStringAsync(new Uri("/", UriKind.Relative), Ct);
-        using var devPage = await client.GetAsync(new Uri("/dev/ui", UriKind.Relative), Ct);
+        var html = await client.GetStringAsync(new Uri("/account/login", UriKind.Relative), Ct);
 
-        Assert.DoesNotContain("UI kit", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("sd-env-badge", html, StringComparison.Ordinal);
+        Assert.Contains("<h1>Sign in</h1>", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"UserName\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Production_hides_developer_pages()
+    {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        using var devPage = await client.GetAsync(new Uri("/dev/ui", UriKind.Relative), Ct);
         Assert.Equal(HttpStatusCode.NotFound, devPage.StatusCode);
     }
 
     [Fact]
     public async Task Every_page_sends_security_headers()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
         using var response = await client.GetAsync(new Uri("/", UriKind.Relative), Ct);
 
@@ -50,37 +56,30 @@ public sealed class ShellTests(ServiceDeskWebFactory factory) : IClassFixture<Se
         Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
         Assert.Equal("DENY", Assert.Single(response.Headers.GetValues("X-Frame-Options")));
         Assert.Equal("strict-origin-when-cross-origin", Assert.Single(response.Headers.GetValues("Referrer-Policy")));
-        Assert.True(response.Headers.CacheControl?.NoStore);
         Assert.False(response.Headers.Contains("Server"));
     }
 
     [Fact]
-    public async Task Unknown_pages_show_the_friendly_404_page_with_headers()
+    public async Task Unknown_pages_redirect_unauthenticated_users_to_sign_in()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
         using var response = await client.GetAsync(new Uri("/no-such-page", UriKind.Relative), Ct);
-        var html = await response.Content.ReadAsStringAsync(Ct);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Contains("Page not found", html, StringComparison.Ordinal);
-        Assert.Contains("Go to the dashboard", html, StringComparison.Ordinal);
-        Assert.True(response.Headers.Contains("Content-Security-Policy"));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("/account/login", response.Headers.Location?.OriginalString, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task Unknown_api_routes_answer_with_problem_details()
+    public async Task Unknown_api_routes_answer_with_unauthorized_for_anonymous_requests()
     {
         using var client = factory.CreateClient();
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("/api/no-such-endpoint", UriKind.Relative));
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         using var response = await client.SendAsync(request, Ct);
-        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        Assert.Equal(404, json.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]

@@ -1,0 +1,133 @@
+@model ServiceDesk.Web.ViewModels.Tickets.TicketIndexViewModel
+@using ServiceDesk.Domain.Enums
+@{
+    ViewData["Title"] = "Tickets";
+}
+
+<div class="sd-page-head">
+    <div>
+        <h2>Tickets</h2>
+        <p class="sd-page-lede">Track, triage, and resolve service requests.</p>
+    </div>
+    <div class="sd-page-actions">
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg" aria-hidden="true"></i>New ticket</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="Search">Search</label>
+                <input class="form-control" id="Search" name="Search" value="@Model.Search" placeholder="Ticket number, subject, requester..." />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="StatusId">Status</label>
+                <select class="form-select" id="StatusId" name="StatusId" asp-items="Model.Statuses"></select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="PriorityId">Priority</label>
+                <select class="form-select" id="PriorityId" name="PriorityId" asp-items="Model.Priorities"></select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="TeamId">Team</label>
+                <select class="form-select" id="TeamId" name="TeamId" asp-items="Model.Teams"></select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="Sort">Sort</label>
+                <select class="form-select" id="Sort" name="Sort">
+                    <option value="updated_desc" selected="@(Model.Sort=="updated_desc")">Recently updated</option>
+                    <option value="created_desc" selected="@(Model.Sort=="created_desc")">Newest</option>
+                    <option value="created_asc" selected="@(Model.Sort=="created_asc")">Oldest</option>
+                    <option value="priority_desc" selected="@(Model.Sort=="priority_desc")">Priority</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-3 align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="OpenOnly" name="OpenOnly" value="true" @(Model.OpenOnly ? "checked" : "") />
+                    <label class="form-check-label" for="OpenOnly">Open tickets only</label>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i>Apply</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">Results</h3>
+        <span class="text-body-secondary small">@Model.TotalCount ticket(s)</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Items.Count == 0)
+        {
+            <div class="sd-empty">
+                <div class="sd-empty-icon"><i class="bi bi-inbox"></i></div>
+                <h4 class="sd-empty-title">No tickets found</h4>
+                <p>Try adjusting your filters or create a new ticket.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle sd-stack">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Requester</th>
+                            <th class="m-hide">Team</th>
+                            <th class="m-hide">Assignee</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th class="m-hide">Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var t in Model.Items)
+                    {
+                        <tr>
+                            <td class="m-title">
+                                <a asp-action="Details" asp-route-id="@t.Id" class="text-decoration-none">
+                                    <span class="sd-ticket-no">@t.TicketNumber</span>
+                                </a>
+                                <div class="mt-1">@t.Subject</div>
+                                @if (!string.IsNullOrWhiteSpace(t.Category))
+                                {
+                                    <div class="small text-body-secondary">@t.Category</div>
+                                }
+                            </td>
+                            <td>@t.Requester</td>
+                            <td class="m-hide">@(t.Team ?? "—")</td>
+                            <td class="m-hide">@(t.Assignee ?? "Unassigned")</td>
+                            <td><status-badge code="@t.StatusCode" /></td>
+                            <td><priority-indicator code="@t.PriorityCode" /></td>
+                            <td class="m-hide"><local-time value="@t.UpdatedAtUtc" /></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="small text-body-secondary">Page @Model.Page of @Model.TotalPages</span>
+            <nav aria-label="Ticket pages">
+                <ul class="pagination pagination-sm mb-0">
+                    @{
+                        var prev = Math.Max(1, Model.Page - 1);
+                        var next = Math.Min(Model.TotalPages, Model.Page + 1);
+                    }
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-Search="@Model.Search" asp-route-StatusId="@Model.StatusId" asp-route-PriorityId="@Model.PriorityId" asp-route-TeamId="@Model.TeamId" asp-route-OpenOnly="@Model.OpenOnly" asp-route-Sort="@Model.Sort" asp-route-Page="@prev">Previous</a>
+                    </li>
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-Search="@Model.Search" asp-route-StatusId="@Model.StatusId" asp-route-PriorityId="@Model.PriorityId" asp-route-TeamId="@Model.TeamId" asp-route-OpenOnly="@Model.OpenOnly" asp-route-Sort="@Model.Sort" asp-route-Page="@next">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

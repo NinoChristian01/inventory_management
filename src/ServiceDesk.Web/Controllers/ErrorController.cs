@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ServiceDesk.Web.ErrorHandling;
@@ -10,6 +11,7 @@ namespace ServiceDesk.Web.Controllers;
 /// here with the original HTTP method, so actions accept any method and skip antiforgery checks
 /// (a failed antiforgery check must still be able to show its error page).
 /// </summary>
+[AllowAnonymous]
 [Route("error")]
 [IgnoreAntiforgeryToken]
 [ApiExplorerSettings(IgnoreApi = true)]

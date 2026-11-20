@@ -1,0 +1,99 @@
+@model IReadOnlyList<ServiceDesk.Web.ViewModels.Users.UserListItemViewModel>
+@{
+    ViewData["Title"] = "Users";
+    var q = ViewBag.Query as string;
+}
+
+<div class="sd-page-head">
+    <div>
+        <h2>Users</h2>
+        <p class="sd-page-lede">Imported and system users. Admins can activate accounts and issue temporary passwords.</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="q">Search</label>
+                <input class="form-control" id="q" name="q" value="@q" placeholder="Name, username, employee number..." />
+            </div>
+            <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-primary">Search</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">User list</h3>
+        <span class="small text-body-secondary">@Model.Count shown (max 300)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle sd-stack">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th class="m-hide">Employee #</th>
+                        <th class="m-hide">Department</th>
+                        <th class="m-hide">Roles</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td class="m-title">
+                            <a asp-action="Details" asp-route-id="@u.Id" class="fw-semibold text-decoration-none">@u.FullName</a>
+                            @if (u.MustChangePassword) { <div><span class="badge text-bg-warning mt-1">Must change password</span></div> }
+                        </td>
+                        <td>@u.UserName</td>
+                        <td class="m-hide">@(u.EmployeeNumber ?? "—")</td>
+                        <td class="m-hide">@(u.Department ?? "—")</td>
+                        <td class="m-hide">@(string.IsNullOrWhiteSpace(u.Roles) ? "—" : u.Roles)</td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span class="sd-badge sd-status-open">Active</span>
+                            }
+                            else
+                            {
+                                <span class="sd-badge sd-status-closed">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <div class="d-grid gap-2" style="min-width: 220px;">
+                                    <form method="post" asp-action="Activate" asp-route-id="@u.Id" class="d-flex gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="text" name="tempPassword" class="form-control form-control-sm" placeholder="Temp password" aria-label="Temporary password" />
+                                        <button type="submit" class="btn btn-sm btn-primary">Activate</button>
+                                    </form>
+                                    @if (u.IsActive)
+                                    {
+                                        <form method="post" asp-action="Deactivate" asp-route-id="@u.Id">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Deactivate</button>
+                                        </form>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-body-secondary small">View only</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,73 @@
+@model IReadOnlyList<ServiceDesk.Web.Controllers.NotificationItemVm>
+@{
+    ViewData["Title"] = "Notifications";
+    var unread = Model.Count(x => !x.IsRead);
+}
+
+<div class="sd-page-head">
+    <div>
+        <h2>Notifications</h2>
+        <p class="sd-page-lede">Updates about your tickets and activity.</p>
+    </div>
+    <div class="sd-page-actions">
+        @if (unread > 0)
+        {
+            <form method="post" asp-action="MarkAllRead">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-primary">Mark all as read</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">Recent notifications</h3>
+        <span class="small text-body-secondary">@unread unread</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Count == 0)
+        {
+            <div class="p-4 text-body-secondary">No notifications yet.</div>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var n in Model)
+                {
+                    <li class="list-group-item py-3 @(n.IsRead ? "" : "bg-light-subtle")">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if (!n.IsRead)
+                                    {
+                                        <span class="badge text-bg-primary">New</span>
+                                    }
+                                    <strong>@n.Title</strong>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(n.Body))
+                                {
+                                    <div class="text-body-secondary">@n.Body</div>
+                                }
+                                <div class="small text-body-secondary mt-1">
+                                    <local-time value="@n.CreatedAtUtc" />
+                                    @if (!string.IsNullOrWhiteSpace(n.LinkUrl))
+                                    {
+                                        <span>·</span> <a href="@n.LinkUrl">Open</a>
+                                    }
+                                </div>
+                            </div>
+                            @if (!n.IsRead)
+                            {
+                                <form method="post" asp-action="MarkRead" asp-route-id="@n.Id">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Mark read</button>
+                                </form>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

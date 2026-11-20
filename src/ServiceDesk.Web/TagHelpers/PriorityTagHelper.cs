@@ -7,14 +7,12 @@ using ServiceDesk.Web.Helpers;
 namespace ServiceDesk.Web.TagHelpers;
 
 /// <summary>
-/// <c>&lt;priority-indicator code="High" /&gt;</c> or <c>code="@ticket.Priority"</c> renders a colored dot and the priority
-/// name. The name is always written out, so the meaning never depends on color alone.
+/// Renders a colored priority indicator. Accepts enum names/codes as strings (e.g. "High").
 /// </summary>
 [HtmlTargetElement("priority-indicator", TagStructure = TagStructure.WithoutEndTag)]
 public sealed class PriorityTagHelper : TagHelper
 {
-    public PriorityCode Code { get; set; }
-
+    public string? Code { get; set; }
     public string? Label { get; set; }
 
     public override void Process(TagHelperContext context, TagHelperOutput output)
@@ -23,7 +21,15 @@ public sealed class PriorityTagHelper : TagHelper
         output.TagName = "span";
         output.TagMode = TagMode.StartTagAndEndTag;
         output.AddClass("sd-priority", HtmlEncoder.Default);
-        output.AddClass(DisplayHelpers.PriorityCssClass(Code), HtmlEncoder.Default);
-        output.Content.SetContent(string.IsNullOrWhiteSpace(Label) ? DisplayHelpers.PriorityLabel(Code) : Label);
+
+        if (Enum.TryParse<PriorityCode>(Code, ignoreCase: true, out var parsed))
+        {
+            output.AddClass(DisplayHelpers.PriorityCssClass(parsed), HtmlEncoder.Default);
+            output.Content.SetContent(string.IsNullOrWhiteSpace(Label) ? DisplayHelpers.PriorityLabel(parsed) : Label);
+            return;
+        }
+
+        var fallback = (Code ?? string.Empty).Trim();
+        output.Content.SetContent(string.IsNullOrWhiteSpace(Label) ? (string.IsNullOrEmpty(fallback) ? "Unknown" : fallback) : Label);
     }
 }
